@@ -58,5 +58,5 @@ Sessionx.vim
 tags
 # Persistent undo
 [._]*.un~
-
+/_output
 # End of https://www.toptal.com/developers/gitignore/api/linux,vim,go
