@@ -23,8 +23,10 @@
 package miniblog
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 func NewMiniBlogCommand() *cobra.Command {
@@ -45,17 +47,20 @@ func NewMiniBlogCommand() *cobra.Command {
 			return nil
 		},
 	}
-	//以下设置使得initConfig函数在每个命令运行时都会被调用已读取配置
-	cobra.OnInitialize(initConfig)
+
 	// Cobra 支持持久性标志(PersistentFlag)，该标志可用于它所分配的命令以及该命令下的每个子命令
 	cmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file (default os $HOME/.yaml)")
 	// Cobra 也支持本地标志，本地标志只能在其所绑定的命令上使用
 	cmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	//以下设置使得initConfig函数在每个命令运行时都会被调用已读取配置
+	cobra.OnInitialize(initConfig)
 	return cmd
 }
 
 // 实际业务代码入口
 func run() error {
+	marshal, _ := json.Marshal(viper.AllSettings())
+	fmt.Println(string(marshal))
 	fmt.Println("Hello MiniBlog!")
 	return nil
 }

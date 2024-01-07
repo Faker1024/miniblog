@@ -27,7 +27,7 @@ import (
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -35,6 +35,9 @@ var cfgFile string
 
 // 指定配置文件名
 const defaultConfigName = "miniblog"
+
+// 服务配置的默认目录
+const recommendedHomeDir = ".miniblog"
 
 func initConfig() {
 	if cfgFile != "" {
@@ -46,14 +49,14 @@ func initConfig() {
 		// 当err不为空，输出错误并退出
 		cobra.CheckErr(err)
 		//将home加入配置文件搜索路径
-		viper.AddConfigPath(home)
+		viper.AddConfigPath(filepath.Join(home, recommendedHomeDir))
 		//将当前目录加入配置文件搜索路径
 		viper.AddConfigPath(".")
-		//将配置文件格式定义为yaml文件
-		viper.SetConfigType("yaml")
-		//配置文件名
-		viper.SetConfigName(defaultConfigName)
 	}
+	//将配置文件格式定义为yaml文件
+	viper.SetConfigType("yaml")
+	//配置文件名
+	viper.SetConfigName(defaultConfigName)
 	//读取匹配的环境变量
 	viper.AutomaticEnv()
 	//设置读取的环境变量前缀，如果为小写则自动转化为大写
@@ -62,8 +65,9 @@ func initConfig() {
 	replacer := strings.NewReplacer(".", "-")
 	viper.SetEnvKeyReplacer(replacer)
 	if err := viper.ReadInConfig(); err != nil {
+		fmt.Println(err)
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 	}
 	//打印viper当前使用的配置文件，方便后续的Debug.
-	fmt.Println(os.Stdout, "Using config file", viper.ConfigFileUsed())
+	fmt.Println("Using config file", viper.ConfigFileUsed())
 }
