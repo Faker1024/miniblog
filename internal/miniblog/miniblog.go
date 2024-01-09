@@ -25,6 +25,7 @@ package miniblog
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/marmotedu/miniblog/internal/pkg/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -36,6 +37,9 @@ func NewMiniBlogCommand() *cobra.Command {
 		Long:         "",
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			//初始化日志
+			log.Init(logOptions())
+			defer log.Sync()
 			return run()
 		},
 		Args: func(cmd *cobra.Command, args []string) error {
@@ -60,7 +64,8 @@ func NewMiniBlogCommand() *cobra.Command {
 // 实际业务代码入口
 func run() error {
 	marshal, _ := json.Marshal(viper.AllSettings())
-	fmt.Println(string(marshal))
+	log.Infow(string(marshal))
+	log.Infow(viper.GetString("db.username"))
 	fmt.Println("Hello MiniBlog!")
 	return nil
 }

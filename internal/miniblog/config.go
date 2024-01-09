@@ -24,6 +24,7 @@ package miniblog
 
 import (
 	"fmt"
+	"github.com/marmotedu/miniblog/internal/pkg/log"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -70,4 +71,15 @@ func initConfig() {
 	}
 	//打印viper当前使用的配置文件，方便后续的Debug.
 	fmt.Println("Using config file", viper.ConfigFileUsed())
+}
+
+// logOptions 从viper中读取日志配置，构建`*log.Options` 并返回
+func logOptions() *log.Options {
+	return &log.Options{
+		DisableCaller:     viper.GetBool("log.disable-caller"),
+		DisableStacktrace: viper.GetBool("log.disable-stacktrace"),
+		Level:             viper.GetString("log.level"),
+		Format:            viper.GetString("log.format"),
+		OutputPaths:       viper.GetStringSlice("log.output-paths"),
+	}
 }

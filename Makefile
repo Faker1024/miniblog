@@ -17,7 +17,7 @@ all: add-copyright format build
 
 .PHONY: build
 build: tidy # 编译源码，依赖 tidy 目标自动添加/移除依赖包.
-	@go build -v -o $(OUTPUT_DIR)/miniblog $(ROOT_DIR)/cmd/main.go
+	@go build -ldflags "-X main.version=v1.0.0" -v -o $(OUTPUT_DIR)/miniblog $(ROOT_DIR)/cmd/main.go
 
 .PHONY: format
 format: # 格式化 Go 源码.
@@ -25,7 +25,7 @@ format: # 格式化 Go 源码.
 
 .PHONY: add-copyright
 add-copyright: # 添加版权头信息.
-	@addlicense -v -f $(ROOT_DIR)/LICENSE  $(ROOT_DIR) --skip-dirs=third_party,vendor,$(OUTPUT_DIR)
+	@addlicense -v -f $(ROOT_DIR)/LICENSE  $(ROOT_DIR) --skip-dirs=.idea,config,$(OUTPUT_DIR)
 
 .PHONY: swagger
 swagger: # 启动 swagger 在线文档.

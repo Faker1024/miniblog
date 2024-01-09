@@ -41,8 +41,8 @@ type Options struct {
 // NewOptions 创建一个带有默认参数的 Options 对象
 func NewOptions() *Options {
 	return &Options{
-		DisableCaller:     true,
-		DisableStacktrace: true,
+		DisableCaller:     false,
+		DisableStacktrace: false,
 		Level:             zapcore.InfoLevel.String(),
 		Format:            "console",
 		OutputPaths:       []string{"stdout"},
