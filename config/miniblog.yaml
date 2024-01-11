@@ -29,10 +29,14 @@ db:
   max-idle-connections: 100 # MySQL 最大空闲连接数，默认 100
   max-open-connections: 100 # MySQL 最大打开的连接数，默认 100
   max-connection-life-time: 10s # 空闲连接最大存活时间，默认 10s
-  log-level: 4 # GORM log level, 1: silent, 2:error, 3:warn, 4:info
+  log-lev|el: 4 # GORM log level, 1: silent, 2:error, 3:warn, 4:info
+# 日志配置
 log:
   disable-caller: false
   disable-stacktrace: false
   level: debug
   format: console
   output-paths: [/tmp/miniblog.log]
+# 通用配置
+runmode: debug  # 可选值： debug release test
+addr: 127.0.0.1:8080  # 端口号

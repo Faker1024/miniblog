@@ -23,11 +23,14 @@
 package miniblog
 
 import (
-	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"github.com/marmotedu/miniblog/internal/pkg/log"
+	"github.com/marmotedu/miniblog/internal/pkg/version/verflag"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"net/http"
 )
 
 func NewMiniBlogCommand() *cobra.Command {
@@ -39,6 +42,7 @@ func NewMiniBlogCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			//初始化日志
 			log.Init(logOptions())
+			verflag.PrintAndExitIfRequest()
 			defer log.Sync()
 			return run()
 		},
@@ -63,9 +67,26 @@ func NewMiniBlogCommand() *cobra.Command {
 
 // 实际业务代码入口
 func run() error {
-	marshal, _ := json.Marshal(viper.AllSettings())
-	log.Infow(string(marshal))
-	log.Infow(viper.GetString("db.username"))
-	fmt.Println("Hello MiniBlog!")
+	// 设置Gin模式
+	gin.SetMode(viper.GetString("runmode"))
+	g := gin.New()
+	//404页面
+	g.NoRoute(func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"code": 10003, "message": "Page not found"})
+	})
+	//注册/healthz handler
+	g.GET("/healthz", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "OK"})
+	})
+	//创建HTTP Server 服务器
+	httpsrv := &http.Server{Addr: viper.GetString("addr"), Handler: g}
+
+	//运行HTTP 服务器
+	//打印一条日志， 用来提示HTTP服务已经起来，方便排障
+	log.Infow("Start to listening the incoming request on http address", "addr", viper.GetString("addr"))
+	err := httpsrv.ListenAndServe()
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
+		log.Fatalw(err.Error())
+	}
 	return nil
 }
