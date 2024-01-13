@@ -1,0 +1,94 @@
+// MIT License
+//
+// Copyright (c) 2024 jack 3361935899@qq.com
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
+
+syntax = "proto3";
+
+package google.api;
+
+option go_package = "./";
+option cc_enable_arenas = true;
+option java_multiple_files = true;
+option java_outer_classname = "HttpProto";
+option java_package = "com.google.api";
+
+
+// Defines the HTTP configuration for a service. It contains a list of
+// [HttpRule][google.api.HttpRule], each specifying the mapping of an RPC method
+// to one or more HTTP REST API methods.
+message Http {
+  // A list of HTTP rules for configuring the HTTP REST API methods.
+  repeated HttpRule rules = 1;
+}
+
+// Use CustomHttpPattern to specify any HTTP method that is not included in the
+// `pattern` field, such as HEAD, or "*" to leave the HTTP method unspecified for
+// a given URL path rule. The wild-card rule is useful for services that provide
+// content to Web (HTML) clients.
+message HttpRule {
+  // Selects methods to which this rule applies.
+  //
+  // Refer to [selector][google.api.DocumentationRule.selector] for syntax details.
+  string selector = 1;
+
+  // Determines the URL pattern is matched by this rules. This pattern can be
+  // used with any of the {get|put|post|delete|patch} methods. A custom method
+  // can be defined using the 'custom' field.
+  oneof pattern {
+    // Used for listing and getting information about resources.
+    string get = 2;
+
+    // Used for updating a resource.
+    string put = 3;
+
+    // Used for creating a resource.
+    string post = 4;
+
+    // Used for deleting a resource.
+    string delete = 5;
+
+    // Used for updating a resource.
+    string patch = 6;
+
+    // Custom pattern is used for defining custom verbs.
+    CustomHttpPattern custom = 8;
+  }
+
+  // The name of the request field whose value is mapped to the HTTP body, or
+  // `*` for mapping all fields not captured by the path pattern to the HTTP
+  // body. NOTE: the referred field must not be a repeated field.
+  string body = 7;
+
+  // Additional HTTP bindings for the selector. Nested bindings must
+  // not contain an `additional_bindings` field themselves (that is,
+  // the nesting may only be one level deep).
+  repeated HttpRule additional_bindings = 11;
+}
+
+// A custom pattern is used for defining custom HTTP verb.
+message CustomHttpPattern {
+  // The name of this custom HTTP verb.
+  string kind = 1;
+
+  // The path matched by this custom verb.
+  string path = 2;
+}
