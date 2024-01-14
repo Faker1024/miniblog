@@ -20,27 +20,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-syntax = "proto3";
+package middleware
 
-package proto;
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"github.com/marmotedu/miniblog/internal/pkg/know"
+)
 
-option go_package = "./";
-
-import "google/api/annotations.proto";
-
-service HelloWorld {
-  rpc SayHelloWorld(HelloWorldRequest) returns (HelloWorldResponse) {
-    option (google.api.http) = {
-      post: "/hello_world"
-      body: "*"
-    };
-  }
-}
-
-message HelloWorldRequest {
-  string referer = 1;
-}
-
-message HelloWorldResponse {
-  string message = 1;
+func RequestID() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		requestId := c.Request.Header.Get(know.XRequestIDKey)
+		if requestId == "" {
+			requestId = uuid.New().String()
+		}
+		// 将RequestId保存在gin.context中，方便后边程序使用
+		c.Set(know.XRequestIDKey, requestId)
+		// 将RequestId保存在HTTP返回头中。Header的键为`X-Request-ID`
+		c.Writer.Header().Set(know.XRequestIDKey, requestId)
+		c.Next()
+	}
 }

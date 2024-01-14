@@ -20,27 +20,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-syntax = "proto3";
+package know
 
-package proto;
-
-option go_package = "./";
-
-import "google/api/annotations.proto";
-
-service HelloWorld {
-  rpc SayHelloWorld(HelloWorldRequest) returns (HelloWorldResponse) {
-    option (google.api.http) = {
-      post: "/hello_world"
-      body: "*"
-    };
-  }
-}
-
-message HelloWorldRequest {
-  string referer = 1;
-}
-
-message HelloWorldResponse {
-  string message = 1;
-}
+const (
+	// XRequestIDKey 用来定义Gin上下文中键，代表请求的uuid
+	XRequestIDKey = "X-Request-ID"
+)

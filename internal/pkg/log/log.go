@@ -23,7 +23,9 @@
 package log
 
 import (
+	"context"
 	"fmt"
+	"github.com/marmotedu/miniblog/internal/pkg/know"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"sync"
@@ -111,6 +113,11 @@ func NewLogger(opts *Options) *zapLogger {
 	return logger
 }
 
+// C 解析传入的context，尝试提取关注的键值，并添加到zap.Logger结构化日志中
+func C(ctx context.Context) *zapLogger {
+	return std.C(ctx)
+}
+
 // Sync 调用底层Sync方法，将缓存中的日志刷新入磁盘文件，主程序需要在退出前调用Sync
 func Sync() {
 	std.Sync()
@@ -125,54 +132,69 @@ func (l *zapLogger) Sync() {
 
 // Debugw 输出debug级别的日志
 func Debugw(msg string, keysAndValues ...interface{}) {
-	std.z.Sugar().Debugw(msg, keysAndValues)
+	std.z.Sugar().Debugw(msg, keysAndValues...)
 }
 
 func (l *zapLogger) Debugw(msg string, keysAndValues ...interface{}) {
-	l.z.Sugar().Debugw(msg, keysAndValues)
+	l.z.Sugar().Debugw(msg, keysAndValues...)
 }
 
 // Infow 输出debug级别的日志
 func Infow(msg string, keysAndValues ...interface{}) {
-	std.z.Sugar().Infow(msg, keysAndValues)
+	std.z.Sugar().Infow(msg, keysAndValues...)
 }
 
 func (l *zapLogger) Infow(msg string, keysAndValues ...interface{}) {
-	l.z.Sugar().Infow(msg, keysAndValues)
+	l.z.Sugar().Infow(msg, keysAndValues...)
 }
 
 // Warnw 输出debug级别的日志
 func Warnw(msg string, keysAndValues ...interface{}) {
-	std.z.Sugar().Warnw(msg, keysAndValues)
+	std.z.Sugar().Warnw(msg, keysAndValues...)
 }
 
 func (l *zapLogger) Warnw(msg string, keysAndValues ...interface{}) {
-	l.z.Sugar().Warnw(msg, keysAndValues)
+	l.z.Sugar().Warnw(msg, keysAndValues...)
 }
 
 // Errorw 输出debug级别的日志
 func Errorw(msg string, keysAndValues ...interface{}) {
-	std.z.Sugar().Errorw(msg, keysAndValues)
+	std.z.Sugar().Errorw(msg, keysAndValues...)
 }
 
 func (l *zapLogger) Errorw(msg string, keysAndValues ...interface{}) {
-	l.z.Sugar().Errorw(msg, keysAndValues)
+	l.z.Sugar().Errorw(msg, keysAndValues...)
 }
 
 // Panicw 输出debug级别的日志
 func Panicw(msg string, keysAndValues ...interface{}) {
-	std.z.Sugar().Panicw(msg, keysAndValues)
+	std.z.Sugar().Panicw(msg, keysAndValues...)
 }
 
 func (l *zapLogger) Panicw(msg string, keysAndValues ...interface{}) {
-	l.z.Sugar().Panicw(msg, keysAndValues)
+	l.z.Sugar().Panicw(msg, keysAndValues...)
 }
 
 // Fatalw 输出debug级别的日志
 func Fatalw(msg string, keysAndValues ...interface{}) {
-	std.z.Sugar().Fatalw(msg, keysAndValues)
+	std.z.Sugar().Fatalw(msg, keysAndValues...)
 }
 
 func (l *zapLogger) Fatalw(msg string, keysAndValues ...interface{}) {
-	l.z.Sugar().Fatalw(msg, keysAndValues)
+	l.z.Sugar().Fatalw(msg, keysAndValues...)
+}
+
+func (l *zapLogger) C(ctx context.Context) *zapLogger {
+	lc := l.clone()
+	requestID := ctx.Value(know.XRequestIDKey)
+	if requestID != nil {
+		lc.z = lc.z.With(zap.Any(know.XRequestIDKey, requestID))
+	}
+	return lc
+}
+
+// clone 深度拷贝 zapLogger
+func (l *zapLogger) clone() *zapLogger {
+	lc := *l
+	return &lc
 }

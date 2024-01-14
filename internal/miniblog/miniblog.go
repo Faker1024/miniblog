@@ -23,12 +23,15 @@
 package miniblog
 
 import (
+	"errors"
 	"fmt"
-	"github.com/golang/protobuf/proto"
+	"github.com/gin-gonic/gin"
 	"github.com/marmotedu/miniblog/internal/pkg/log"
+	"github.com/marmotedu/miniblog/internal/pkg/middleware"
 	"github.com/marmotedu/miniblog/internal/pkg/version/verflag"
-	__ "github.com/marmotedu/miniblog/proto"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"net/http"
 )
 
 func NewMiniBlogCommand() *cobra.Command {
@@ -65,39 +68,28 @@ func NewMiniBlogCommand() *cobra.Command {
 
 // 实际业务代码入口
 func run() error {
-	//// 设置Gin模式
-	//gin.SetMode(viper.GetString("runmode"))
-	//g := gin.New()
-	////404页面
-	//g.NoRoute(func(c *gin.Context) {
-	//	c.JSON(http.StatusOK, gin.H{"code": 10003, "message": "Page not found"})
-	//})
-	////注册/healthz handler
-	//g.GET("/healthz", func(c *gin.Context) {
-	//	c.JSON(http.StatusOK, gin.H{"status": "OK"})
-	//})
-	////创建HTTP Server 服务器
-	//httpsrv := &http.Server{Addr: viper.GetString("addr"), Handler: g}
-	//
-	////运行HTTP 服务器
-	////打印一条日志， 用来提示HTTP服务已经起来，方便排障
-	//log.Infow("Start to listening the incoming request on http address", "addr", viper.GetString("addr"))
-	//err := httpsrv.ListenAndServe()
-	//if err != nil && !errors.Is(err, http.ErrServerClosed) {
-	//	log.Fatalw(err.Error())
-	//}
-
-	request := &__.HelloWorldRequest{Referer: "hello world"}
-	marshal, err := proto.Marshal(request)
-	if err != nil {
-		log.Fatalw("序列化失败， %d", err)
+	// 设置Gin模式
+	gin.SetMode(viper.GetString("runmode"))
+	g := gin.New()
+	mws := []gin.HandlerFunc{gin.Recovery(), middleware.RequestID(), middleware.Cors, middleware.Secure, middleware.NoCache}
+	g.Use(mws...)
+	//404页面
+	g.NoRoute(func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"code": 10003, "message": "Page not found"})
+	})
+	//注册/healthz handler
+	g.GET("/healthz", func(c *gin.Context) {
+		log.C(c).Infow("Healthz function called")
+		c.JSON(http.StatusOK, gin.H{"status": "OK"})
+	})
+	//创建HTTP Server 服务器
+	httpsrv := &http.Server{Addr: viper.GetString("addr"), Handler: g}
+	//运行HTTP 服务器
+	//打印一条日志， 用来提示HTTP服务已经起来，方便排障
+	log.Infow("Start to listening the incoming request on http address", "addr", viper.GetString("addr"))
+	err := httpsrv.ListenAndServe()
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
+		log.Fatalw(err.Error())
 	}
-	i := &__.HelloWorldRequest{}
-	err = proto.Unmarshal(marshal, i)
-	if err != nil {
-		log.Fatalw("反序列化失败， %d", err)
-	}
-	fmt.Println(i.GetReferer())
-
 	return nil
 }
