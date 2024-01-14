@@ -23,6 +23,7 @@
 package miniblog
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -32,6 +33,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 func NewMiniBlogCommand() *cobra.Command {
@@ -87,9 +92,30 @@ func run() error {
 	//运行HTTP 服务器
 	//打印一条日志， 用来提示HTTP服务已经起来，方便排障
 	log.Infow("Start to listening the incoming request on http address", "addr", viper.GetString("addr"))
-	err := httpsrv.ListenAndServe()
-	if err != nil && !errors.Is(err, http.ErrServerClosed) {
-		log.Fatalw(err.Error())
+	go func() {
+		err := httpsrv.ListenAndServe()
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatalw(err.Error())
+		}
+	}()
+	// 等待终端信号优雅关闭服务器（10秒超时）
+	quit := make(chan os.Signal, 1)
+	/*
+		kill 默认发送 syscall.SIGTERM 信号
+		kill -2 发送 syscall.SIGINT 信号 ctrl + c
+		kill -9 发送 syscall.SIGKILL 信号 无法捕获
+	*/
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM) //不会在此处阻塞
+	<-quit                                               //阻塞，接收到上述两种信号继续执行
+	log.Infow("Shutting down server ...")
+	// 创建ctx用于通知服务器 goroutine， 有10秒时间结束当前请求
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancelFunc()
+	err := httpsrv.Shutdown(ctx)
+	if err != nil {
+		log.Errorw("Insecure Server forced to shutdown", "err", err)
+		return err
 	}
+	log.Infow("Server exiting")
 	return nil
 }
