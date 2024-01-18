@@ -74,6 +74,11 @@ func NewMiniBlogCommand() *cobra.Command {
 
 // 实际业务代码入口
 func run() error {
+	// 初始化store层
+	err := initStore()
+	if err != nil {
+		return err
+	}
 	// 设置Gin模式
 	gin.SetMode(viper.GetString("runmode"))
 	g := gin.New()
@@ -112,7 +117,7 @@ func run() error {
 	// 创建ctx用于通知服务器 goroutine， 有10秒时间结束当前请求
 	ctx, cancelFunc := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancelFunc()
-	err := httpsrv.Shutdown(ctx)
+	err = httpsrv.Shutdown(ctx)
 	if err != nil {
 		log.Errorw("Insecure Server forced to shutdown", "err", err)
 		return err
