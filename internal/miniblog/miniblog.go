@@ -27,7 +27,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/marmotedu/miniblog/internal/pkg/core"
 	"github.com/marmotedu/miniblog/internal/pkg/log"
 	"github.com/marmotedu/miniblog/internal/pkg/middleware"
 	"github.com/marmotedu/miniblog/internal/pkg/version/verflag"
@@ -84,15 +83,10 @@ func run() error {
 	g := gin.New()
 	mws := []gin.HandlerFunc{gin.Recovery(), middleware.RequestID(), middleware.Cors, middleware.Secure, middleware.NoCache}
 	g.Use(mws...)
-	//404页面
-	g.NoRoute(func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"code": 10003, "message": "Page not found"})
-	})
-	//注册/healthz handler
-	g.GET("/healthz", func(c *gin.Context) {
-		log.C(c).Infow("Healthz function called")
-		core.WriteResponse(c, nil, map[string]string{"status": "OK"})
-	})
+	err = installRouters(g)
+	if err != nil {
+		return err
+	}
 	//创建HTTP Server 服务器
 	httpsrv := &http.Server{Addr: viper.GetString("addr"), Handler: g}
 	//运行HTTP 服务器

@@ -1,10 +1,32 @@
+// MIT License
+//
+// Copyright (c) 2024 jack 3361935899@qq.com
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 package v1
 
 // CreateUserRequest 制定了`POST/v1/users`接口的请求参数
 type CreateUserRequest struct {
-	Username string `json:"username" valid:"alphanumeric, required, string length(1|255)" `
-	Password string `json:"password" valid:"required, string length(6|18)"`
-	Nickname string `json:"nickname" valid:"required, string length(1|255)"`
+	Username string `json:"username" valid:"alphanum, required, stringlength(1|255)" `
+	Password string `json:"password" valid:"required, stringlength(6|18)"`
+	Nickname string `json:"nickname" valid:"required, stringlength(1|255)"`
 	Email    string `json:"email" valid:"required, email"`
-	Phone    string `json:"phone" valid:"required, string length(11|11)"`
+	Phone    string `json:"phone" valid:"required, stringlength(11|11)"`
 }

@@ -23,36 +23,44 @@
 package user
 
 import (
-	"context"
-	"github.com/jinzhu/copier"
+	"github.com/asaskevich/govalidator"
+	"github.com/gin-gonic/gin"
+	"github.com/marmotedu/miniblog/internal/miniblog/biz"
 	"github.com/marmotedu/miniblog/internal/miniblog/store"
+	"github.com/marmotedu/miniblog/internal/pkg/core"
 	"github.com/marmotedu/miniblog/internal/pkg/errno"
+	"github.com/marmotedu/miniblog/internal/pkg/log"
 	v1 "github.com/marmotedu/miniblog/internal/pkg/miniblog/v1"
-	"github.com/marmotedu/miniblog/internal/pkg/model"
-	"regexp"
 )
 
-type UserBiz interface {
-	Create(ctx context.Context, r *v1.CreateUserRequest) error
+// UserController 是user模块在controller层的实现，用来处理用户模块的请求
+type UserController struct {
+	b biz.IBiz
 }
 
-type userBiz struct {
-	ds store.IStore
+// New 创建一个user controller
+func New(ds store.IStore) *UserController {
+	return &UserController{b: biz.NewBiz(ds)}
 }
 
-func (u userBiz) Create(ctx context.Context, r *v1.CreateUserRequest) error {
-	var userM model.UserM
-	_ = copier.Copy(&userM, r)
-	err := u.ds.Users().Create(ctx, &userM)
+// Create 创建一个新用户
+func (ctrl *UserController) Create(ctx *gin.Context) {
+	log.C(ctx).Infow("Create user function called")
+	var r v1.CreateUserRequest
+	err := ctx.ShouldBindJSON(&r)
 	if err != nil {
-		match, _ := regexp.MatchString("Duplicate entry '.*' for key 'username'", err.Error())
-		if match {
-			return errno.ErrUserAlreadyExist
-		}
+		core.WriteResponse(ctx, errno.ErrBind, nil)
+		return
 	}
-	return nil
-}
-
-func New(ds store.IStore) *userBiz {
-	return &userBiz{ds: ds}
+	_, err = govalidator.ValidateStruct(r)
+	if err != nil {
+		core.WriteResponse(ctx, errno.ErrInvalidParameter.SetMessage(err.Error()), nil)
+		return
+	}
+	err = ctrl.b.User().Create(ctx, &r)
+	if err != nil {
+		core.WriteResponse(ctx, err, nil)
+		return
+	}
+	core.WriteResponse(ctx, errno.OK, nil)
 }

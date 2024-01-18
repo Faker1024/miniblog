@@ -20,32 +20,34 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package store
+package miniblog
 
 import (
-	"context"
-	"github.com/marmotedu/miniblog/internal/pkg/model"
-	"gorm.io/gorm"
+	"github.com/gin-gonic/gin"
+	"github.com/marmotedu/miniblog/internal/miniblog/controller/v1/user"
+	"github.com/marmotedu/miniblog/internal/miniblog/store"
+	"github.com/marmotedu/miniblog/internal/pkg/core"
+	"github.com/marmotedu/miniblog/internal/pkg/errno"
+	"github.com/marmotedu/miniblog/internal/pkg/log"
 )
 
-// users UserStore的实现
-type users struct {
-	db *gorm.DB
-}
-
-// Create 插入一条user记录
-func (u users) Create(ctx context.Context, user *model.UserM) error {
-	return u.db.Create(&user).Error
-}
-
-// 确保users实现了UserStore接口
-var _ UserStore = (*users)(nil)
-
-// UserStore 定义了user模块在store的实现方法
-type UserStore interface {
-	Create(ctx context.Context, user *model.UserM) error
-}
-
-func newUsers(db *gorm.DB) UserStore {
-	return &users{db}
+func installRouters(g *gin.Engine) error {
+	//404页面
+	g.NoRoute(func(c *gin.Context) {
+		core.WriteResponse(c, errno.ErrPageNotFound, nil)
+	})
+	//注册/healthz handler
+	g.GET("/healthz", func(c *gin.Context) {
+		log.C(c).Infow("Healthz function called")
+		core.WriteResponse(c, nil, map[string]string{"status": "OK"})
+	})
+	uc := user.New(store.S)
+	v1 := g.Group("v1")
+	{
+		userv1 := v1.Group("/users")
+		{
+			userv1.POST("", uc.Create)
+		}
+	}
+	return nil
 }
