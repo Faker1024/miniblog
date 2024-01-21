@@ -29,6 +29,7 @@ import (
 	"github.com/marmotedu/miniblog/internal/pkg/core"
 	"github.com/marmotedu/miniblog/internal/pkg/errno"
 	"github.com/marmotedu/miniblog/internal/pkg/log"
+	"github.com/marmotedu/miniblog/internal/pkg/middleware"
 )
 
 func installRouters(g *gin.Engine) error {
@@ -42,11 +43,14 @@ func installRouters(g *gin.Engine) error {
 		core.WriteResponse(c, nil, map[string]string{"status": "OK"})
 	})
 	uc := user.New(store.S)
+	g.POST("/login", uc.Login)
 	v1 := g.Group("v1")
 	{
 		userv1 := v1.Group("/users")
 		{
 			userv1.POST("", uc.Create)
+			userv1.PUT(":name/change-password", uc.ChangePassword)
+			userv1.Use(middleware.Authn())
 		}
 	}
 	return nil

@@ -85,7 +85,7 @@ func run() error {
 	// 设置Gin模式
 	gin.SetMode(viper.GetString("runmode"))
 	g := gin.New()
-	mws := []gin.HandlerFunc{gin.Recovery(), middleware.RequestID(), middleware.Cors, middleware.Secure, middleware.NoCache, middleware.Authn()}
+	mws := []gin.HandlerFunc{gin.Recovery(), middleware.RequestID(), middleware.Cors, middleware.Secure, middleware.NoCache}
 	g.Use(mws...)
 	err = installRouters(g)
 	if err != nil {

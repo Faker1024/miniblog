@@ -23,7 +23,6 @@
 package user
 
 import (
-	"fmt"
 	"github.com/asaskevich/govalidator"
 	"github.com/gin-gonic/gin"
 	"github.com/marmotedu/miniblog/internal/pkg/core"
@@ -32,12 +31,11 @@ import (
 	v1 "github.com/marmotedu/miniblog/internal/pkg/miniblog/v1"
 )
 
-func (ctrl *UserController) ChangePassword(ctx *gin.Context) {
-	log.C(ctx).Infow("Change Password function called")
-	var r *v1.ChangePasswordRequest
+func (ctrl *UserController) Login(ctx *gin.Context) {
+	log.C(ctx).Infow("Login user function called")
+	var r *v1.LoginRequest
 	err := ctx.ShouldBindJSON(&r)
 	if err != nil {
-		fmt.Println(err.Error())
 		core.WriteResponse(ctx, errno.ErrBind, nil)
 		return
 	}
@@ -46,10 +44,11 @@ func (ctrl *UserController) ChangePassword(ctx *gin.Context) {
 		core.WriteResponse(ctx, errno.ErrInvalidParameter.SetMessage(err.Error()), nil)
 		return
 	}
-	err = ctrl.b.User().ChangePassword(ctx, ctx.Param("name"), r)
+	_, err = ctrl.b.User().Login(ctx, r)
 	if err != nil {
 		core.WriteResponse(ctx, err, nil)
 		return
 	}
-	core.WriteResponse(ctx, nil, nil)
+	core.WriteResponse(ctx, errno.OK, nil)
+
 }

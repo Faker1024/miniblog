@@ -24,6 +24,7 @@ package user
 
 import (
 	"context"
+	"fmt"
 	"github.com/jinzhu/copier"
 	"github.com/marmotedu/miniblog/internal/miniblog/store"
 	"github.com/marmotedu/miniblog/internal/pkg/auth"
@@ -37,7 +38,7 @@ import (
 type UserBiz interface {
 	Create(ctx context.Context, r *v1.CreateUserRequest) error
 	ChangePassword(ctx context.Context, username string, request *v1.ChangePasswordRequest) error
-	Login(ctx context.Context, request *v1.CreateUserRequest) (*v1.LoginResponse, error)
+	Login(ctx context.Context, request *v1.LoginRequest) (*v1.LoginResponse, error)
 }
 
 type userBiz struct {
@@ -47,6 +48,9 @@ type userBiz struct {
 func (u userBiz) Create(ctx context.Context, r *v1.CreateUserRequest) error {
 	var userM model.UserM
 	_ = copier.Copy(&userM, r)
+	fmt.Println(userM.Password)
+	userM.Password, _ = auth.Encrypt(userM.Password)
+	fmt.Println(userM.Password)
 	err := u.ds.Users().Create(ctx, &userM)
 	if err != nil {
 		match, _ := regexp.MatchString("Duplicate entry '.*' for key 'username'", err.Error())
@@ -79,14 +83,14 @@ func (b userBiz) ChangePassword(ctx context.Context, username string, request *v
 	return nil
 }
 
-func (b userBiz) Login(ctx context.Context, request *v1.CreateUserRequest) (*v1.LoginResponse, error) {
+func (b userBiz) Login(ctx context.Context, request *v1.LoginRequest) (*v1.LoginResponse, error) {
 	//获取登录用户全部信息
 	user, err := b.ds.Users().Get(ctx, request.Username)
 	if err != nil {
 		return nil, errno.ErrUserNotFound
 	}
 	//对比传入的明文密码和数据库中已加密过的密码是否匹配
-	err = auth.Compare(request.Password, user.Password)
+	err = auth.Compare(user.Password, request.Password)
 	if err != nil {
 		return nil, errno.ErrPasswordIncorrect
 	}

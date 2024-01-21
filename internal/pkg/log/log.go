@@ -186,9 +186,15 @@ func (l *zapLogger) Fatalw(msg string, keysAndValues ...interface{}) {
 
 func (l *zapLogger) C(ctx context.Context) *zapLogger {
 	lc := l.clone()
+	//将请求Id加入打印日志
 	requestID := ctx.Value(know.XRequestIDKey)
 	if requestID != nil {
 		lc.z = lc.z.With(zap.Any(know.XRequestIDKey, requestID))
+	}
+	//将用户Id加入打印日志
+	userId := ctx.Value(know.XUsernameKey)
+	if userId != nil {
+		lc.z = lc.z.With(zap.Any(know.XUsernameKey, userId))
 	}
 	return lc
 }
