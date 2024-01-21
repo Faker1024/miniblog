@@ -21,12 +21,11 @@ func (ctrl *UserController) ChangePassword(ctx *gin.Context) {
 	if err != nil {
 		core.WriteResponse(ctx, errno.ErrInvalidParameter.SetMessage(err.Error()), nil)
 		return
-
-		err := ctrl.b.User().ChangePassword(ctx, ctx.Param("name"), r)
-		if err != nil {
-			core.WriteResponse(ctx, err, nil)
-			return
-		}
-		core.WriteResponse(ctx, nil, nil)
 	}
+	err = ctrl.b.User().ChangePassword(ctx, ctx.Param("name"), r)
+	if err != nil {
+		core.WriteResponse(ctx, err, nil)
+		return
+	}
+	core.WriteResponse(ctx, nil, nil)
 }
