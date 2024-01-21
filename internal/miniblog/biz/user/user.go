@@ -26,14 +26,18 @@ import (
 	"context"
 	"github.com/jinzhu/copier"
 	"github.com/marmotedu/miniblog/internal/miniblog/store"
+	"github.com/marmotedu/miniblog/internal/pkg/auth"
 	"github.com/marmotedu/miniblog/internal/pkg/errno"
 	v1 "github.com/marmotedu/miniblog/internal/pkg/miniblog/v1"
 	"github.com/marmotedu/miniblog/internal/pkg/model"
+	"github.com/marmotedu/miniblog/internal/pkg/token"
 	"regexp"
 )
 
 type UserBiz interface {
 	Create(ctx context.Context, r *v1.CreateUserRequest) error
+	ChangePassword(ctx context.Context, username string, request *v1.ChangePasswordRequest) error
+	Login(ctx context.Context, request *v1.CreateUserRequest) (*v1.LoginResponse, error)
 }
 
 type userBiz struct {
@@ -55,4 +59,41 @@ func (u userBiz) Create(ctx context.Context, r *v1.CreateUserRequest) error {
 
 func New(ds store.IStore) *userBiz {
 	return &userBiz{ds: ds}
+}
+
+// ChangePassword 是UserBiz接口中`ChangePassword`方法的实现
+func (b userBiz) ChangePassword(ctx context.Context, username string, request *v1.ChangePasswordRequest) error {
+	userM, err := b.ds.Users().Get(ctx, username)
+	if err != nil {
+		return err
+	}
+	err = auth.Compare(userM.Password, request.OldPassword)
+	if err != nil {
+		return errno.ErrPasswordIncorrect
+	}
+	userM.Password, _ = auth.Encrypt(request.NewPassword)
+	err = b.ds.Users().Update(ctx, userM)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (b userBiz) Login(ctx context.Context, request *v1.CreateUserRequest) (*v1.LoginResponse, error) {
+	//获取登录用户全部信息
+	user, err := b.ds.Users().Get(ctx, request.Username)
+	if err != nil {
+		return nil, errno.ErrUserNotFound
+	}
+	//对比传入的明文密码和数据库中已加密过的密码是否匹配
+	err = auth.Compare(request.Password, user.Password)
+	if err != nil {
+		return nil, errno.ErrPasswordIncorrect
+	}
+	//匹配成功，登录成功，，签发token并返回
+	t, err := token.Sign(request.Username)
+	if err != nil {
+		return nil, errno.ErrSignToken
+	}
+	return &v1.LoginResponse{Token: t}, nil
 }

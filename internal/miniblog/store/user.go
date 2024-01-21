@@ -28,22 +28,37 @@ import (
 	"gorm.io/gorm"
 )
 
+// UserStore 定义了user模块在store的实现方法
+type UserStore interface {
+	Create(ctx context.Context, user *model.UserM) error
+	Get(ctx context.Context, username string) (*model.UserM, error)
+	Update(ctx context.Context, user *model.UserM) error
+}
+
 // users UserStore的实现
 type users struct {
 	db *gorm.DB
 }
 
-// Create 插入一条user记录
-func (u users) Create(ctx context.Context, user *model.UserM) error {
-	return u.db.Create(&user).Error
+func (u users) Get(ctx context.Context, username string) (*model.UserM, error) {
+	var user model.UserM
+	err := u.db.Where("username = ?", username).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (u users) Update(ctx context.Context, user *model.UserM) error {
+	return u.db.Save(user).Error
 }
 
 // 确保users实现了UserStore接口
 var _ UserStore = (*users)(nil)
 
-// UserStore 定义了user模块在store的实现方法
-type UserStore interface {
-	Create(ctx context.Context, user *model.UserM) error
+// Create 插入一条user记录
+func (u users) Create(ctx context.Context, user *model.UserM) error {
+	return u.db.Create(&user).Error
 }
 
 func newUsers(db *gorm.DB) UserStore {

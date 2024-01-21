@@ -27,8 +27,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/marmotedu/miniblog/internal/pkg/know"
 	"github.com/marmotedu/miniblog/internal/pkg/log"
 	"github.com/marmotedu/miniblog/internal/pkg/middleware"
+	"github.com/marmotedu/miniblog/internal/pkg/token"
 	"github.com/marmotedu/miniblog/internal/pkg/version/verflag"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -75,13 +77,15 @@ func NewMiniBlogCommand() *cobra.Command {
 func run() error {
 	// 初始化store层
 	err := initStore()
+	// 初始化token
+	token.Init(viper.GetString("jwt-secret"), know.XUsernameKey)
 	if err != nil {
 		return err
 	}
 	// 设置Gin模式
 	gin.SetMode(viper.GetString("runmode"))
 	g := gin.New()
-	mws := []gin.HandlerFunc{gin.Recovery(), middleware.RequestID(), middleware.Cors, middleware.Secure, middleware.NoCache}
+	mws := []gin.HandlerFunc{gin.Recovery(), middleware.RequestID(), middleware.Cors, middleware.Secure, middleware.NoCache, middleware.Authn()}
 	g.Use(mws...)
 	err = installRouters(g)
 	if err != nil {

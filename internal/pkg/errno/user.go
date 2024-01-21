@@ -28,4 +28,14 @@ var (
 		Code:    "FailedOperation.UserAlreadyExist",
 		Message: "User already exist",
 	}
+	ErrPasswordIncorrect = &Errno{
+		HTTP:    401,
+		Code:    "InvalidParameter.UserNotFound",
+		Message: "Password was incorrect",
+	}
+	ErrUserNotFound = &Errno{
+		HTTP:    404,
+		Code:    "ResourceNotFound.UserNotFound",
+		Message: "User was not found",
+	}
 )

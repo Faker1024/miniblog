@@ -20,32 +20,26 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package v1
+package middleware
 
-// CreateUserRequest 制定了`POST/v1/users`接口的请求参数
-type CreateUserRequest struct {
-	Username string `json:"username" valid:"alphanum, required, stringlength(1|255)" `
-	Password string `json:"password" valid:"required, stringlength(6|18)"`
-	Nickname string `json:"nickname" valid:"required, stringlength(1|255)"`
-	Email    string `json:"email" valid:"required, email"`
-	Phone    string `json:"phone" valid:"required, stringlength(11|11)"`
-}
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/marmotedu/miniblog/internal/pkg/core"
+	"github.com/marmotedu/miniblog/internal/pkg/errno"
+	"github.com/marmotedu/miniblog/internal/pkg/know"
+	"github.com/marmotedu/miniblog/internal/pkg/token"
+)
 
-// LoginResponse 制定`POST/login`接口的返回参数
-type LoginResponse struct {
-	Token string `json:"token"`
-}
-
-// ChangePasswordRequest 指定了`POST/v1/users/{name}/change-password` 接口的请求参数
-type ChangePasswordRequest struct {
-	//旧密码
-	OldPassword string `json:"oldPassword" valid:"required, stringlength(6|18)"`
-	//新密码
-	NewPassword string `json:"newPassword" valid:"required, stringlength(6|18)"`
-}
-
-// LoginRequest 指定`POST/login`接口的请求参数
-type LoginRequest struct {
-	Username string `json:"username" valid:"alphanum, required, stringlength(1|255)"`
-	Password string `json:"password" valid:"required, stringlength(6|18)"`
+func Authn() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		//解析JWT Token
+		username, err := token.ParseRequest(c)
+		if err != nil {
+			core.WriteResponse(c, errno.ErrTokenInvalid, nil)
+			c.Abort()
+			return
+		}
+		c.Set(know.XUsernameKey, username)
+		c.Next()
+	}
 }

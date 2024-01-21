@@ -54,4 +54,15 @@ var (
 		Code:    "InvalidParameter",
 		Message: "Parameter verification failed",
 	}
+	// ErrTokenInvalid 表示JWT Token格式错误
+	ErrTokenInvalid = &Errno{
+		HTTP:    401,
+		Code:    "AuthFailure.TokenInvalid",
+		Message: "Token was invalid",
+	}
+	ErrSignToken = &Errno{
+		HTTP:    401,
+		Code:    "AuthFailure.SignTokenError",
+		Message: "Error occurred while signing the JSON web Token",
+	}
 )
