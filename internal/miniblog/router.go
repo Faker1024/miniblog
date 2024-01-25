@@ -26,6 +26,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/marmotedu/miniblog/internal/miniblog/controller/v1/user"
 	"github.com/marmotedu/miniblog/internal/miniblog/store"
+	"github.com/marmotedu/miniblog/internal/pkg/auth"
 	"github.com/marmotedu/miniblog/internal/pkg/core"
 	"github.com/marmotedu/miniblog/internal/pkg/errno"
 	"github.com/marmotedu/miniblog/internal/pkg/log"
@@ -42,15 +43,20 @@ func installRouters(g *gin.Engine) error {
 		log.C(c).Infow("Healthz function called")
 		core.WriteResponse(c, nil, map[string]string{"status": "OK"})
 	})
-	uc := user.New(store.S)
+	authz, err := auth.NewAuthz(store.S.DB())
+	if err != nil {
+		return err
+	}
+	uc := user.New(store.S, authz)
 	g.POST("/login", uc.Login)
-	v1 := g.Group("v1")
+	v1 := g.Group("/v1")
 	{
 		userv1 := v1.Group("/users")
 		{
 			userv1.POST("", uc.Create)
 			userv1.PUT(":name/change-password", uc.ChangePassword)
-			userv1.Use(middleware.Authn())
+			userv1.Use(middleware.Authn(), middleware.Authz(authz))
+			userv1.GET(":name", uc.Get)
 		}
 	}
 	return nil

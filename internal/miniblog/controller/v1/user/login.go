@@ -44,11 +44,10 @@ func (ctrl *UserController) Login(ctx *gin.Context) {
 		core.WriteResponse(ctx, errno.ErrInvalidParameter.SetMessage(err.Error()), nil)
 		return
 	}
-	_, err = ctrl.b.User().Login(ctx, r)
+	res, err := ctrl.b.User().Login(ctx, r)
 	if err != nil {
 		core.WriteResponse(ctx, err, nil)
 		return
 	}
-	core.WriteResponse(ctx, errno.OK, nil)
-
+	core.WriteResponse(ctx, nil, res)
 }

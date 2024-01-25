@@ -44,6 +44,10 @@ type datastore struct {
 	db *gorm.DB
 }
 
+func (ds *datastore) DB() *gorm.DB {
+	return ds.db
+}
+
 func (d datastore) Users() UserStore {
 	return newUsers(d.db)
 }

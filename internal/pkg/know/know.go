@@ -27,4 +27,6 @@ const (
 	XRequestIDKey = "X-Request-ID"
 	// XUsernameKey 用来定义Gin上下文的键，代表请求的所有者
 	XUsernameKey = "X-Username"
+	// XTimeStamp 時間格式
+	XTimeStamp = "2006-01-02 15:04:05"
 )

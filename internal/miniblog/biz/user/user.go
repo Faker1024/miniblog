@@ -29,6 +29,7 @@ import (
 	"github.com/marmotedu/miniblog/internal/miniblog/store"
 	"github.com/marmotedu/miniblog/internal/pkg/auth"
 	"github.com/marmotedu/miniblog/internal/pkg/errno"
+	"github.com/marmotedu/miniblog/internal/pkg/know"
 	v1 "github.com/marmotedu/miniblog/internal/pkg/miniblog/v1"
 	"github.com/marmotedu/miniblog/internal/pkg/model"
 	"github.com/marmotedu/miniblog/internal/pkg/token"
@@ -39,10 +40,23 @@ type UserBiz interface {
 	Create(ctx context.Context, r *v1.CreateUserRequest) error
 	ChangePassword(ctx context.Context, username string, request *v1.ChangePasswordRequest) error
 	Login(ctx context.Context, request *v1.LoginRequest) (*v1.LoginResponse, error)
+	Get(ctx context.Context, username string) (*v1.GetUserResponse, error)
 }
 
 type userBiz struct {
 	ds store.IStore
+}
+
+func (u userBiz) Get(ctx context.Context, username string) (*v1.GetUserResponse, error) {
+	var res v1.GetUserResponse
+	userM, err := u.ds.Users().Get(ctx, username)
+	if err != nil {
+		return nil, err
+	}
+	err = copier.Copy(&res, userM)
+	res.CreateAt = userM.CreatedAt.Format(know.XTimeStamp)
+	res.UpdateAt = userM.UpdatedAt.Format(know.XTimeStamp)
+	return &res, nil
 }
 
 func (u userBiz) Create(ctx context.Context, r *v1.CreateUserRequest) error {

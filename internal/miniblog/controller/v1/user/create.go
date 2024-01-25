@@ -31,6 +31,8 @@ import (
 	v1 "github.com/marmotedu/miniblog/internal/pkg/miniblog/v1"
 )
 
+const defaultMethods = "(GET)|(POST)|(PUT)|(DELETE)"
+
 // Create 创建一个新用户
 func (ctrl *UserController) Create(ctx *gin.Context) {
 	log.C(ctx).Infow("Create user function called")
@@ -46,6 +48,11 @@ func (ctrl *UserController) Create(ctx *gin.Context) {
 		return
 	}
 	err = ctrl.b.User().Create(ctx, &r)
+	if err != nil {
+		core.WriteResponse(ctx, err, nil)
+		return
+	}
+	_, err = ctrl.a.AddNamedPolicy("p", r.Username, "/v1/users/"+r.Username, defaultMethods)
 	if err != nil {
 		core.WriteResponse(ctx, err, nil)
 		return
